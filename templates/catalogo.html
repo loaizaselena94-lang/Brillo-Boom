@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Catálogo{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h2 class="section-title">Catálogo Completo 💄</h2>
+    <p class="section-subtitle">Explora toda nuestra colección</p>
+
+    <!-- Filtros por marca -->
+    <div style="display:flex;gap:.75rem;flex-wrap:wrap;justify-content:center;margin-bottom:1.5rem;">
+      <a href="{{ url_for('catalogo') }}"
+         class="btn btn-sm {% if not marca_sel %}btn-primary{% else %}btn-ghost{% endif %}">Todas</a>
+      {% for m in marcas %}
+      <a href="{{ url_for('catalogo') }}?marca={{ m.id_empresa_productos }}"
+         class="btn btn-sm {% if marca_sel==m.id_empresa_productos %}btn-primary{% else %}btn-ghost{% endif %}">
+        {{ m.nombre }}
+      </a>
+      {% endfor %}
+    </div>
+
+    <!-- Búsqueda -->
+    <form method="GET" action="{{ url_for('catalogo') }}"
+          style="display:flex;gap:.75rem;max-width:480px;margin:0 auto 2.5rem;">
+      {% if marca_sel %}<input type="hidden" name="marca" value="{{ marca_sel }}"/>{% endif %}
+      <input name="q" value="{{ busqueda }}" placeholder="Buscar producto…" class="form-control"/>
+      <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
+    </form>
+
+    <div class="products-grid">
+      {% for p in productos %}
+      <div class="product-card">
+        <a href="{{ url_for('detalle_producto', id_producto=p.id_producto) }}" style="text-decoration:none;color:inherit;">
+          <div class="product-card-img">
+            {% if p.tiene_imagen() %}<img src="{{ url_for('imagen_producto', id_producto=p.id_producto) }}" alt="{{ p.nombre }}"/>
+            {% else %}💄{% endif %}
+          </div>
+        </a>
+        <div class="product-card-body">
+          <div class="product-card-brand">{{ p.empresa.nombre }}</div>
+          <div class="product-card-name">{{ p.nombre }}</div>
+          <div class="product-card-desc">{{ p.descripcion }}</div>
+          <div class="product-card-price">${{ "{:,.0f}".format(p.precio) }}</div>
+          <div style="font-size:.75rem;color:var(--gris);margin-bottom:.6rem;">
+            Stock: <strong>{{ p.stock }}</strong>
+          </div>
+          <div class="product-card-footer">
+            {% if p.agotado() %}
+              <span class="badge-agotado"><i class="fas fa-times-circle"></i> Agotado</span>
+            {% elif current_user.is_authenticated and not current_user.es_admin() %}
+              <button class="btn btn-primary btn-sm btn-add-cart"
+                      data-id="{{ p.id_producto }}" data-nombre="{{ p.nombre }}">
+                <i class="fas fa-cart-plus"></i> Agregar
+              </button>
+            {% else %}
+              <a href="{{ url_for('login') }}" class="btn btn-outline btn-sm">
+                <i class="fas fa-lock"></i> Inicia sesión
+              </a>
+            {% endif %}
+            <a href="{{ url_for('detalle_producto', id_producto=p.id_producto) }}"
+               class="btn btn-ghost btn-sm"><i class="fas fa-eye"></i> Ver</a>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div style="grid-column:1/-1;text-align:center;padding:4rem;color:var(--gris);">
+        <div style="font-size:3rem;margin-bottom:1rem;">🔍</div>
+        <p>No se encontraron productos.</p>
+        <a href="{{ url_for('catalogo') }}" class="btn btn-outline" style="margin-top:1rem;">Ver todos</a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

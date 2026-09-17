@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}{{ producto.nombre }}{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <!-- Migajas -->
+    <nav style="font-size:.85rem;color:var(--gris);margin-bottom:1.5rem;">
+      <a href="{{ url_for('index') }}" style="color:var(--rosa);">Inicio</a> /
+      <a href="{{ url_for('catalogo') }}" style="color:var(--rosa);">Catálogo</a> /
+      {{ producto.nombre }}
+    </nav>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:start;margin-bottom:3rem;">
+      <!-- Imagen -->
+      <div style="background:var(--rosa-light);border-radius:var(--radio);
+                  aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+                  font-size:6rem;box-shadow:var(--sombra);">
+        {% if producto.tiene_imagen() %}
+          <img src="{{ url_for('imagen_producto', id_producto=producto.id_producto) }}" alt="{{ producto.nombre }}"
+               style="width:100%;height:100%;object-fit:cover;border-radius:var(--radio);"/>
+        {% else %}💄{% endif %}
+      </div>
+
+      <!-- Info -->
+      <div>
+        <div style="font-size:.8rem;font-weight:700;color:var(--rosa);text-transform:uppercase;
+                    letter-spacing:1px;margin-bottom:.5rem;">{{ producto.empresa.nombre }}</div>
+        <h1 style="font-family:var(--font-title);font-size:2rem;color:var(--negro);
+                   line-height:1.2;margin-bottom:1rem;">{{ producto.nombre }}</h1>
+        <p style="color:#555;line-height:1.8;margin-bottom:1.5rem;font-size:.95rem;">
+          {{ producto.descripcion }}
+        </p>
+        <div style="font-family:var(--font-title);font-size:2.2rem;color:var(--rosa);
+                    font-weight:700;margin-bottom:1rem;">
+          ${{ "{:,.0f}".format(producto.precio) }}
+        </div>
+        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem;">
+          {% if producto.agotado() %}
+            <span class="badge-agotado"><i class="fas fa-times-circle"></i> Agotado</span>
+          {% else %}
+            <span style="background:#eafaf1;color:#27ae60;padding:.3rem .8rem;border-radius:50px;
+                         font-size:.8rem;font-weight:700;">
+              <i class="fas fa-check-circle"></i> Disponible — {{ producto.stock }} unidades
+            </span>
+          {% endif %}
+        </div>
+        {% if not producto.agotado() %}
+          {% if current_user.is_authenticated and not current_user.es_admin() %}
+            <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
+              <div style="display:flex;align-items:center;border:2px solid var(--rosa-light);
+                          border-radius:8px;overflow:hidden;">
+                <button type="button" class="btn-qty-menos"
+                        style="width:38px;height:38px;border:none;background:var(--rosa-light);
+                               color:var(--rosa);font-weight:700;font-size:1.1rem;cursor:pointer;">−</button>
+                <input type="number" id="cantidad-producto" value="1" min="1" max="{{ producto.stock }}"
+                       style="width:55px;height:38px;text-align:center;border:none;font-weight:600;
+                              font-size:.95rem;-moz-appearance:textfield;"/>
+                <button type="button" class="btn-qty-mas"
+                        style="width:38px;height:38px;border:none;background:var(--rosa-light);
+                               color:var(--rosa);font-weight:700;font-size:1.1rem;cursor:pointer;">+</button>
+              </div>
+              <button class="btn btn-primary btn-lg btn-add-cart"
+                      data-id="{{ producto.id_producto }}" data-nombre="{{ producto.nombre }}"
+                      data-qty-input="cantidad-producto">
+                <i class="fas fa-cart-plus"></i> Agregar al carrito
+              </button>
+            </div>
+          {% else %}
+            <a href="{{ url_for('login') }}" class="btn btn-outline btn-lg">
+              <i class="fas fa-lock"></i> Inicia sesión para comprar
+            </a>
+          {% endif %}
+        {% endif %}
+        <a href="{{ url_for('catalogo') }}" class="btn btn-ghost btn-sm" style="margin-left:.75rem;">
+          <i class="fas fa-arrow-left"></i> Volver
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

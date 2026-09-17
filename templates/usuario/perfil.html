@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Mi Perfil{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+
+<div style="display:flex;align-items:center;gap:1.5rem;margin-bottom:2.5rem;
+            background:linear-gradient(135deg,var(--rosa-light),#fff);
+            border-radius:var(--radio);padding:2rem;box-shadow:var(--sombra);">
+
+  <!-- Círculo con lápiz -->
+  <div style="position:relative;flex-shrink:0;">
+    <div style="width:72px;height:72px;border-radius:50%;background:var(--rosa);
+                display:flex;align-items:center;justify-content:center;
+                font-family:var(--font-title);font-size:2rem;color:#fff;">
+      {% if current_user.foto_url %}
+        <img src="{{ current_user.foto_url }}"
+             style="width:72px;height:72px;border-radius:50%;object-fit:cover;"/>
+      {% else %}
+        {{ current_user.nombre[0].upper() }}
+      {% endif %}
+    </div>
+    <a href="{{ url_for('editar_perfil') }}" title="Editar perfil"
+       style="position:absolute;bottom:0;right:0;
+              width:24px;height:24px;border-radius:50%;
+              background:var(--blanco);border:2px solid var(--rosa);
+              display:flex;align-items:center;justify-content:center;
+              color:var(--rosa);font-size:.7rem;text-decoration:none;">
+      <i class="fas fa-pen"></i>
+    </a>
+  </div>
+
+  <!-- Texto -->
+  <div>
+    <h2 style="font-family:var(--font-title);color:var(--rosa);font-size:1.6rem;">
+      ¡Hola, {{ current_user.nombre.split()[0] }}! 👋
+    </h2>
+    <p style="color:var(--gris);font-size:.9rem;">Bienvenida a tu perfil en Brillo-Boom</p>
+  </div>
+
+  <!-- Botones -->
+  <div style="margin-left:auto;display:flex;gap:.75rem;flex-wrap:wrap;">
+    <a href="{{ url_for('catalogo') }}" class="btn btn-primary btn-sm">
+      <i class="fas fa-shopping-bag"></i> Catálogo
+    </a>
+    <a href="{{ url_for('carrito') }}" class="btn btn-ghost btn-sm">
+      <i class="fas fa-shopping-cart"></i> Carrito
+    </a>
+  </div>
+
+</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2rem;">
+      <!-- Datos personales -->
+      <div class="profile-card">
+        <h3 style="font-family:var(--font-title);color:var(--rosa);margin-bottom:1.2rem;">
+          <i class="fas fa-user"></i> Mis datos
+        </h3>
+        <div class="profile-info">
+          {% for icon, label, valor in [
+            ('user','Nombre',current_user.nombre),
+            ('envelope','Correo',current_user.email),
+            ('phone','Teléfono',current_user.telefono),
+            ('map-marker-alt','Dirección',current_user.direccion)
+          ] %}
+          <div class="profile-info-row">
+            <span class="profile-info-label"><i class="fas fa-{{ icon }}"></i> {{ label }}</span>
+            <span>{{ valor }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <!-- Resumen -->
+      <div class="profile-card">
+        <h3 style="font-family:var(--font-title);color:var(--rosa);margin-bottom:1.2rem;">
+          <i class="fas fa-chart-bar"></i> Mi resumen
+        </h3>
+        <div class="kpi-grid" style="grid-template-columns:1fr 1fr;gap:1rem;">
+          <div class="kpi-card">
+            <div class="kpi-label">Pedidos</div>
+            <div class="kpi-value">{{ pedidos|length }}</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Total gastado</div>
+            <div class="kpi-value" style="font-size:1.1rem;">
+              ${{ "{:,.0f}".format(pedidos|sum(attribute='valor')) if pedidos else '0' }}
+            </div>
+          </div>
+        </div>
+        <a href="{{ url_for('logout') }}" class="btn btn-outline btn-sm"
+           style="margin-top:1.5rem;width:100%;"
+           onclick="return confirm('¿Cerrar sesión?')">
+          <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+        </a>
+      </div>
+    </div>
+
+    <!-- Historial -->
+    <h3 style="font-family:var(--font-title);color:var(--rosa);margin-bottom:1.2rem;">
+      <i class="fas fa-box"></i> Mis Pedidos
+    </h3>
+    {% if pedidos %}
+    <div style="background:var(--blanco);border-radius:var(--radio);box-shadow:var(--sombra);overflow:hidden;">
+      <table class="admin-table">
+        <thead>
+          <tr><th>#</th><th>Producto</th><th>Marca</th><th>Cant.</th><th>Total</th><th>Fecha</th></tr>
+        </thead>
+        <tbody>
+          {% for p in pedidos %}
+          <tr>
+            <td><strong>#{{ p.id_pedido }}</strong></td>
+            <td>
+              {% if p.producto %}
+              {{ p.producto.nombre }}
+              {% else %}
+              {{ p.nombre_producto or 'Producto eliminado' }}
+              {% endif %}
+            </td>
+            <td><span style="background:var(--rosa-light);color:var(--rosa);padding:.15rem .6rem;
+                            border-radius:50px;font-size:.75rem;font-weight:600;">
+                {{ p.producto.empresa.nombre }}</span></td>
+            <td>{{ p.cantidad }}</td>
+            <td><strong style="color:var(--rosa);">${{ "{:,.0f}".format(p.valor) }}</strong></td>
+            <td>{{ p.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:3rem;background:var(--blanco);
+                border-radius:var(--radio);box-shadow:var(--sombra);">
+      <div style="font-size:3.5rem;margin-bottom:1rem;">📦</div>
+      <p style="color:var(--gris);margin-bottom:1.5rem;">Aún no tienes pedidos.</p>
+      <a href="{{ url_for('catalogo') }}" class="btn btn-primary">
+        <i class="fas fa-shopping-bag"></i> Ver catálogo
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

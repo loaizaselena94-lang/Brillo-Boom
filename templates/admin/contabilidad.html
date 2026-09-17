@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Contabilidad — Admin Brillo-Boom{% endblock %}
+{% block content %}
+<div style="display:flex;min-height:90vh">
+  <aside class="admin-sidebar d-none d-md-block">
+    <div class="logo-sidebar">
+      <img src="{{ url_for('static',filename='images/BRILLO.svg') }}" alt="Brillo-Boom">
+    <nav class="mt-2">
+      <a href="{{ url_for('admin_dashboard') }}" class="admin-nav-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+      <a href="{{ url_for('admin_productos') }}" class="admin-nav-link"><i class="bi bi-box-seam"></i> Productos</a>
+      <a href="{{ url_for('admin_usuarios') }}" class="admin-nav-link"><i class="bi bi-people"></i> Usuarios</a>
+      <a href="{{ url_for('admin_contabilidad') }}" class="admin-nav-link active"><i class="bi bi-graph-up-arrow"></i> Contabilidad</a>
+    </nav>
+  </aside>
+  <main class="admin-content">
+    <h3 style="color:var(--carmesi);margin-bottom:1.5rem"><i class="bi bi-graph-up me-2"></i>Contabilidad mensual</h3>
+
+    <!-- Gráfico -->
+    <div style="background:var(--blanco);border-radius:var(--radio);padding:1.5rem;box-shadow:var(--sombra);margin-bottom:1.5rem">
+      <canvas id="grafico-contabilidad"
+        data-labels='{{ contabilidad | map(attribute="nombre_mes") | list | tojson }}'
+        data-valores='{{ contabilidad | map(attribute="total") | list | tojson }}'
+        style="max-height:280px">
+      </canvas>
+    </div>
+
+    <!-- Tabla por mes -->
+    <div class="tabla-admin mb-4">
+      <div style="padding:1rem 1.2rem;border-bottom:1px solid var(--rosa-dark)">
+        <h5 style="margin:0;color:var(--carmesi);font-size:0.95rem">Ventas por mes</h5>
+      </div>
+      <table class="table mb-0">
+        <thead><tr><th>Mes</th><th>Nº Pedidos</th><th>Total vendido</th><th>Detalle</th></tr></thead>
+        <tbody>
+          {% for row in contabilidad %}
+          <tr>
+            <td><strong>{{ row.nombre_mes }}</strong></td>
+            <td>{{ row.num_pedidos }}</td>
+            <td style="color:var(--carmesi);font-weight:700">${{ "%.2f"|format(row.total) }}</td>
+            <td>
+              <a href="{{ url_for('admin_contabilidad', mes=row.mes) }}"
+                 class="btn-outline-carmesi" style="font-size:0.75rem;padding:0.2rem 0.6rem">
+                Ver detalle
+              </a>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" class="text-center text-muted py-4">Sin datos de ventas aún</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Detalle del mes seleccionado -->
+    {% if detalle_mes %}
+    <div class="tabla-admin">
+      <div style="padding:1rem 1.2rem;border-bottom:1px solid var(--rosa-dark)">
+        <h5 style="margin:0;color:var(--carmesi);font-size:0.95rem">
+          Productos vendidos en el mes {{ mes_sel }}
+        </h5>
+      </div>
+      <table class="table mb-0">
+        <thead><tr><th>Producto</th><th>Unidades vendidas</th><th>Ingreso</th></tr></thead>
+        <tbody>
+          {% for item in detalle_mes %}
+          <tr>
+            <td><strong>{{ item.nombre }}</strong></td>
+            <td>{{ item.unidades }}</td>
+            <td style="color:var(--carmesi);font-weight:600">${{ "%.2f"|format(item.ingreso) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+  </main>
+</div>
+{% endblock %}

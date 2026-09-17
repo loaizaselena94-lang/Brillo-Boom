@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Error {{ codigo }}{% endblock %}
+{% block content %}
+<div class="error-page">
+  <div class="error-code">{{ codigo }}</div>
+  <p class="error-msg">{{ mensaje }}</p>
+  <p style="color:var(--gris);margin-bottom:2rem;">{{ detalle }}</p>
+  <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+    <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">
+      <i class="fas fa-home"></i> Volver al inicio
+    </a>
+    {% if codigo == 403 %}
+    <a href="{{ url_for('login') }}" class="btn btn-outline btn-lg">
+      <i class="fas fa-sign-in-alt"></i> Iniciar sesión
+    </a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

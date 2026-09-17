@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin — Brillo-Boom</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+<div class="admin-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-logo">
+      <img src="{{ url_for('static', filename='images/BRILLO.svg') }}" alt="Logo"/>
+      <span>Brillo-Boom</span>
+    </div>
+    <ul class="sidebar-nav">
+      <li><a href="{{ url_for('admin_dashboard') }}"  class="{{ 'active' if vista=='dashboard' else '' }}"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+      <li><a href="{{ url_for('admin_productos') }}"  class="{{ 'active' if vista=='productos' else '' }}"><i class="fas fa-box-open"></i> Productos</a></li>
+      <li><a href="{{ url_for('admin_usuarios') }}"   class="{{ 'active' if vista=='usuarios' else '' }}"><i class="fas fa-users"></i> Usuarios</a></li>
+      <li><a href="{{ url_for('admin_pedidos') }}"    class="{{ 'active' if vista=='pedidos' else '' }}"><i class="fas fa-shopping-bag"></i> Pedidos</a></li>
+      <li><a href="{{ url_for('index') }}" target="_blank"><i class="fas fa-external-link-alt"></i> Ver tienda</a></li>
+    </ul>
+    <div style="margin-top:auto;padding-top:2rem;">
+      <a href="{{ url_for('logout') }}"
+         style="display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.6);
+                text-decoration:none;padding:.75rem 1rem;border-radius:10px;font-size:.88rem;">
+        <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+      </a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="admin-main">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}{% for cat,msg in messages %}
+        <div class="alert alert-{{ 'danger' if cat=='error' else cat }}" data-auto-close>{{ msg }}</div>
+      {% endfor %}{% endif %}
+    {% endwith %}
+
+    <!-- ═══ DASHBOARD ═══ -->
+    {% if vista == 'dashboard' %}
+    <div class="admin-header">
+      <h1><i class="fas fa-chart-pie"></i> Dashboard</h1>
+      <span style="color:var(--gris);font-size:.88rem;">
+        <i class="fas fa-user"></i> {{ current_user.nombre }}
+        <span style="background:var(--rosa-light);color:var(--rosa);padding:.2rem .6rem;
+                     border-radius:50px;font-size:.72rem;font-weight:700;margin-left:.5rem;">ADMIN</span>
+      </span>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Total Productos</div>
+        <div class="kpi-value">{{ stats.total_productos }}</div>
+        <div class="kpi-icon"><i class="fas fa-box-open"></i></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Usuarios Registrados</div>
+        <div class="kpi-value">{{ stats.total_usuarios }}</div>
+        <div class="kpi-icon"><i class="fas fa-users"></i></div>
+      </div>
+      <div class="kpi-card" style="border-left-color:#dc3545;">
+        <div class="kpi-label">Productos Agotados</div>
+        <div class="kpi-value" style="color:#dc3545;">{{ stats.agotados|length }}</div>
+        <div class="kpi-icon" style="color:#dc3545;"><i class="fas fa-exclamation-triangle"></i></div>
+      </div>
+      <div class="kpi-card" style="border-left-color:#27ae60;">
+        <div class="kpi-label">Pedidos Recientes</div>
+        <div class="kpi-value" style="color:#27ae60;">{{ stats.pedidos_recientes|length }}</div>
+        <div class="kpi-icon" style="color:#27ae60;"><i class="fas fa-shopping-bag"></i></div>
+      </div>
+    </div>
+
+    {% if stats.agotados %}
+    <div style="background:var(--blanco);border-radius:var(--radio);padding:1.5rem;
+                box-shadow:var(--sombra);margin-bottom:1.5rem;border-left:4px solid #dc3545;">
+      <h3 style="color:#dc3545;margin-bottom:1rem;font-family:var(--font-title);">
+        <i class="fas fa-exclamation-triangle"></i> Productos Agotados ({{ stats.agotados|length }})
+      </h3>
+      <div style="display:flex;flex-wrap:wrap;gap:.75rem;">
+        {% for p in stats.agotados %}
+        <div style="background:#fdecea;border-radius:8px;padding:.5rem 1rem;font-size:.85rem;
+                    display:flex;align-items:center;gap:.5rem;">
+          <i class="fas fa-times-circle" style="color:#dc3545;"></i>
+          <strong>{{ p.nombre }}</strong>
+          <span style="color:var(--gris);">— {{ p.empresa.nombre }}</span>
+          <a href="{{ url_for('admin_producto_editar', id=p.id_producto) }}"
+             style="color:var(--rosa);font-size:.75rem;font-weight:600;">Reponer</a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <div style="background:var(--blanco);border-radius:var(--radio);padding:1.5rem;box-shadow:var(--sombra);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;">
+        <h3 style="font-family:var(--font-title);color:var(--rosa);">
+          <i class="fas fa-shopping-bag"></i> Pedidos Recientes
+        </h3>
+        <a href="{{ url_for('admin_pedidos') }}" class="btn btn-ghost btn-sm">Ver todos</a>
+      </div>
+      {% if stats.pedidos_recientes %}
+      <table class="admin-table">
+        <thead><tr><th>#</th><th>Cliente</th><th>Producto</th><th>Marca</th><th>Cant.</th><th>Valor</th><th>Fecha</th></tr></thead>
+        <tbody>
+          {% for p in stats.pedidos_recientes %}
+          <tr>
+            <td><strong>#{{ p.id_pedido }}</strong></td>
+            <td>{{ p.usuario.nombre }}</td>
+            <td>{{ p.producto.nombre }}</td>
+            <td><span style="background:var(--rosa-light);color:var(--rosa);padding:.15rem .5rem;
+                            border-radius:50px;font-size:.72rem;font-weight:600;">{{ p.producto.empresa.nombre }}</span></td>
+            <td>{{ p.cantidad }}</td>
+            <td><strong style="color:var(--rosa);">${{ "{:,.0f}".format(p.valor) }}</strong></td>
+            <td>{{ p.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p style="color:var(--gris);text-align:center;padding:2rem;">No hay pedidos aún.</p>
+      {% endif %}
+    </div>
+
+    <!-- ═══ PRODUCTOS ═══ -->
+    {% elif vista == 'productos' %}
+    <div class="admin-header">
+      <h1><i class="fas fa-box-open"></i> Gestión de Productos</h1>
+      <a href="{{ url_for('admin_producto_nuevo') }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Nuevo producto
+      </a>
+    </div>
+        <!-- BOTONES DE REPORTES -->
+    <div style="display:flex;gap:1rem;margin-bottom:2rem;flex-wrap:wrap;">
+      <a href="{{ url_for('reporte_productos') }}" class="btn btn-primary btn-sm">
+        <i class="fas fa-file-pdf"></i> Reporte Productos PDF
+      </a>
+      <a href="{{ url_for('reporte_productos_excel') }}" class="btn btn-outline-primary btn-sm">
+        <i class="fas fa-file-excel"></i> Reporte Productos Excel
+      </a>
+    </div>
+    <div style="display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+      <div style="background:var(--blanco);border-radius:10px;padding:.75rem 1.2rem;
+                  box-shadow:var(--sombra);border-left:3px solid var(--rosa);font-size:.88rem;">
+        <strong style="color:var(--rosa);">{{ productos|length }}</strong> totales
+      </div>
+      <div style="background:var(--blanco);border-radius:10px;padding:.75rem 1.2rem;
+                  box-shadow:var(--sombra);border-left:3px solid #dc3545;font-size:.88rem;">
+        <strong style="color:#dc3545;">{{ productos|selectattr('stock','le',0)|list|length }}</strong> agotados
+      </div>
+      <div style="background:var(--blanco);border-radius:10px;padding:.75rem 1.2rem;
+                  box-shadow:var(--sombra);border-left:3px solid #27ae60;font-size:.88rem;">
+        <strong style="color:#27ae60;">{{ productos|rejectattr('stock','le',0)|list|length }}</strong> disponibles
+      </div>
+    </div>
+    <div style="background:var(--blanco);border-radius:var(--radio);box-shadow:var(--sombra);overflow:hidden;">
+      <table class="admin-table">
+        <thead><tr><th>#</th><th>Producto</th><th>Marca</th><th>Precio</th><th>Stock</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody>
+          {% for p in productos %}
+          <tr>
+            <td><strong>#{{ p.id_producto }}</strong></td>
+            <td>
+              <div style="font-weight:600;">{{ p.nombre }}</div>
+              <div style="font-size:.75rem;color:var(--gris);margin-top:.15rem;">{{ p.descripcion[:50] }}…</div>
+            </td>
+            <td><span style="background:var(--rosa-light);color:var(--rosa);padding:.2rem .7rem;
+                            border-radius:50px;font-size:.75rem;font-weight:600;">{{ p.empresa.nombre }}</span></td>
+            <td><strong>${{ "{:,.0f}".format(p.precio) }}</strong></td>
+            <td><span style="font-weight:600;color:{% if p.stock==0 %}#dc3545{% elif p.stock<5 %}#f39c12{% else %}#27ae60{% endif %};">
+                {{ p.stock }}</span></td>
+            <td>
+              {% if p.agotado() %}
+                <span style="background:#fdecea;color:#dc3545;padding:.25rem .7rem;border-radius:50px;font-size:.72rem;font-weight:700;">
+                  <i class="fas fa-times-circle"></i> Agotado</span>
+              {% else %}
+                <span style="background:#eafaf1;color:#27ae60;padding:.25rem .7rem;border-radius:50px;font-size:.72rem;font-weight:700;">
+                  <i class="fas fa-check-circle"></i> Disponible</span>
+              {% endif %}
+            </td>
+            <td>
+              <div style="display:flex;gap:.4rem;">
+                <a href="{{ url_for('admin_producto_editar', id=p.id_producto) }}"
+                   class="btn btn-ghost btn-sm"><i class="fas fa-edit"></i> Editar</a>
+                <form method="POST" action="{{ url_for('admin_producto_eliminar', id=p.id_producto) }}"
+                      onsubmit="return confirm('¿Eliminar «{{ p.nombre }}»?')">
+                  <button type="submit" class="btn btn-sm"
+                          style="background:#fdecea;color:#c00;border:none;">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7" style="text-align:center;color:var(--gris);padding:3rem;">
+            No hay productos. <a href="{{ url_for('admin_producto_nuevo') }}" style="color:var(--rosa);">Crea el primero</a>
+          </td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ═══ PEDIDOS ═══ -->
+    {% elif vista == 'pedidos' %}
+    <div class="admin-header">
+      <h1><i class="fas fa-shopping-bag"></i> Todos los Pedidos</h1>
+      <span style="background:var(--rosa-light);color:var(--rosa);padding:.4rem 1rem;
+                   border-radius:50px;font-weight:700;">{{ pedidos|length }} pedidos</span>
+    </div>
+        <!-- BOTONES DE REPORTES -->
+    <div style="display:flex;gap:1rem;margin-bottom:2rem;flex-wrap:wrap;">
+      <a href="{{ url_for('reporte_pedidos') }}" class="btn btn-primary btn-sm">
+        <i class="fas fa-file-pdf"></i> Reporte Pedidos PDF
+      </a>
+    </div>
+    <div style="background:var(--blanco);border-radius:var(--radio);box-shadow:var(--sombra);overflow:hidden;">
+      <table class="admin-table">
+        <thead><tr><th>#</th><th>Cliente</th><th>Producto</th><th>Marca</th><th>Cantidad</th><th>Valor</th><th>Fecha</th><th>Acciones</th></tr></thead>
+        <tbody>
+          {% for p in pedidos %}
+          <tr>
+            <td><strong>#{{ p.id_pedido }}</strong></td>
+            <td>{{ p.usuario.nombre }}</td>
+            <td>{{ p.producto.nombre }}</td>
+            <td><span style="background:var(--rosa-light);color:var(--rosa);padding:.15rem .5rem;
+                            border-radius:50px;font-size:.72rem;font-weight:600;">{{ p.producto.empresa.nombre }}</span></td>
+            <td>{{ p.cantidad }}</td>
+            <td><strong style="color:var(--rosa);">${{ "{:,.0f}".format(p.valor) }}</strong></td>
+            <td>{{ p.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
+
+            <td>
+              <form method="POST"
+                action="{{ url_for('admin_eliminar_pedido', id=p.id_pedido) }}"
+                onsubmit="return confirm('¿Eliminar el pedido #{{ p.id_pedido }}?')">
+                <button type="submit" class="btn btn-sm"
+                  style="background:#fdecea;color:#c00;border:none;">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </form>
+            </td>
+
+          </tr>
+          {% else %}
+          <tr><td colspan="7" style="text-align:center;color:var(--gris);padding:3rem;">No hay pedidos aún.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+  </main>
+</div>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Registrarse — Brillo-Boom{% endblock %}
+{% block content %}
+<div style="min-height:85vh;background:linear-gradient(135deg,var(--rosa) 0%,var(--blanco) 100%);display:flex;align-items:center;justify-content:center;padding:2rem 1rem;">
+  <div class="auth-card">
+    <div class="text-center mb-3">
+      <img src="{{ url_for('static', filename='images/logo_1.webp') }}" alt="Brillo-Boom" class="logo-auth">
+      <p style="color:var(--texto-gris);font-size:0.85rem" class="mt-1">Crea tu cuenta gratis 💄</p>
+    </div>
+    <div class="auth-tabs">
+      <a href="{{ url_for('login') }}" class="auth-tab">Iniciar sesion</a>
+      <a href="{{ url_for('registro') }}" class="auth-tab active">Registrarse</a>
+    </div>
+    <form method="POST" action="{{ url_for('registro') }}" data-loading>
+      {{ form.hidden_tag() if form }}
+      <div class="row g-2 mb-2">
+        <div class="col-6">
+          <label class="form-label-bb">Nombre *</label>
+          <input type="text" name="nombre" class="form-control-bb" placeholder="Ana" required maxlength="80">
+        </div>
+        <div class="col-6">
+          <label class="form-label-bb">Apellido *</label>
+          <input type="text" name="apellido" class="form-control-bb" placeholder="Garcia" required maxlength="80">
+        </div>
+      </div>
+      <div class="mb-2">
+        <label class="form-label-bb">Correo electronico *</label>
+        <input type="email" name="email" id="email" class="form-control-bb" placeholder="tucorreo@ejemplo.com" required>
+        <span class="form-error" id="email-feedback"></span>
+      </div>
+      <div class="row g-2 mb-2">
+        <div class="col-6">
+          <label class="form-label-bb">Telefono</label>
+          <input type="tel" name="telefono" class="form-control-bb" placeholder="+57 300 000 0000">
+        </div>
+        <div class="col-6">
+          <label class="form-label-bb">Ciudad / Direccion</label>
+          <input type="text" name="direccion" class="form-control-bb" placeholder="Bogota">
+        </div>
+      </div>
+      <div class="mb-2 position-relative">
+        <label class="form-label-bb">Contrasena * <small id="pass-strength" class="ms-2"></small></label>
+        <input type="password" name="password" id="password" class="form-control-bb" placeholder="Minimo 6 caracteres" required>
+      </div>
+      <div class="mb-3 position-relative">
+        <label class="form-label-bb">Confirmar contrasena *</label>
+        <input type="password" name="confirmar" id="confirmar" class="form-control-bb" placeholder="Repite tu contrasena" required>
+        <span class="form-error" id="pass-feedback"></span>
+      </div>
+      <div class="mb-3">
+        <label style="font-size:0.82rem;display:flex;align-items:flex-start;gap:0.5rem;cursor:pointer">
+          <input type="checkbox" name="terminos" required style="margin-top:3px">
+          <span>Acepto los terminos y condiciones</span>
+        </label>
+      </div>
+      <button type="submit" class="btn-carmesi w-100 justify-content-center mb-3">
+        <i class="bi bi-person-check"></i> Crear mi cuenta
+      </button>
+    </form>
+    <div style="display:flex;align-items:center;gap:0.8rem;margin:0.8rem 0">
+      <div style="flex:1;height:1px;background:var(--rosa-dark)"></div>
+      <span style="font-size:0.78rem;color:var(--texto-gris)">o registrate con</span>
+      <div style="flex:1;height:1px;background:var(--rosa-dark)"></div>
+    </div>
+    <div class="d-flex gap-2 justify-content-center">
+      <a href="#" class="btn-social" style="flex:1;justify-content:center">
+        <img src="https://www.google.com/favicon.ico" width="18" height="18" alt="Google"> Google
+      </a>
+      <a href="#" class="btn-social" style="flex:1;justify-content:center">
+        <i class="bi bi-facebook" style="color:#1877f2"></i> Facebook
+      </a>
+      <a href="#" class="btn-social" style="flex:1;justify-content:center">
+        <i class="bi bi-tiktok"></i> TikTok
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

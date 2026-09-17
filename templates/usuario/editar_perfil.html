@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Editar Perfil{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container" style="max-width:600px;">
+    <h2 class="section-title">Editar Perfil ✏️</h2>
+
+    <div style="background:var(--blanco);border-radius:var(--radio);
+                box-shadow:var(--sombra);padding:2rem;">
+
+      <!-- Avatar actual -->
+      <div style="text-align:center;margin-bottom:2rem;">
+        {% if current_user.foto_url %}
+          <img src="{{ current_user.foto_url }}"
+               style="width:90px;height:90px;border-radius:50%;
+                      object-fit:cover;border:3px solid var(--rosa);"/>
+        {% else %}
+          <div style="width:90px;height:90px;border-radius:50%;
+                      background:var(--rosa);display:flex;align-items:center;
+                      justify-content:center;font-family:var(--font-title);
+                      font-size:2.5rem;color:#fff;margin:0 auto;">
+            {{ current_user.nombre[0].upper() }}
+          </div>
+        {% endif %}
+        <p style="color:var(--gris);font-size:.82rem;margin-top:.5rem;">
+          Foto de perfil actual
+        </p>
+      </div>
+
+      <form method="POST" action="{{ url_for('editar_perfil') }}" novalidate>
+
+        <div class="form-group">
+          <label class="form-label">
+            <i class="fas fa-user"></i> Nombre completo
+          </label>
+          <input type="text" name="nombre" class="form-control"
+                 value="{{ current_user.nombre }}" required/>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            <i class="fas fa-phone"></i> Teléfono
+          </label>
+          <input type="tel" name="telefono" class="form-control"
+                 value="{{ current_user.telefono }}" required/>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            <i class="fas fa-map-marker-alt"></i> Dirección
+          </label>
+          <input type="text" name="direccion" class="form-control"
+                 value="{{ current_user.direccion }}" required/>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            <i class="fas fa-camera"></i> URL de foto de perfil
+          </label>
+          <input type="text" name="foto_url" id="foto-input" class="form-control"
+                 value="{{ current_user.foto_url or '' }}"
+                 placeholder="https://ejemplo.com/mi-foto.jpg"/>
+          <p style="font-size:.78rem;color:var(--gris);margin-top:.3rem;">
+            Pega el enlace de una imagen de internet
+          </p>
+          <img id="foto-preview"
+               src="{{ current_user.foto_url or '' }}"
+               style="height:70px;width:70px;border-radius:50%;
+                      object-fit:cover;margin-top:.5rem;
+                      border:2px solid var(--rosa);
+                      {% if not current_user.foto_url %}display:none;{% endif %}"/>
+        </div>
+
+        <div style="display:flex;gap:.75rem;margin-top:1.5rem;">
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Guardar cambios
+          </button>
+          <a href="{{ url_for('perfil') }}" class="btn btn-ghost">
+            <i class="fas fa-times"></i> Cancelar
+          </a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</section>
+
+<script>
+document.getElementById('foto-input').addEventListener('input', function() {
+  const prev = document.getElementById('foto-preview');
+  prev.src = this.value;
+  prev.style.display = this.value ? 'block' : 'none';
+  prev.onerror = () => prev.style.display = 'none';
+});
+</script>
+{% endblock %}

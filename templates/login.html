@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Acceso — Brillo-Boom</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    .form-grid  { display:grid; grid-template-columns:1fr 1fr; gap:.9rem; }
+    .method-tab { flex:1; padding:.5rem; text-align:center; border-radius:8px; cursor:pointer;
+                  font-size:.85rem; font-weight:600; border:2px solid var(--rosa-light);
+                  background:var(--blanco); color:var(--gris); transition:all .25s; }
+    .method-tab.active { background:var(--rosa); color:#fff; border-color:var(--rosa); }
+    .login-method { display:none; }
+    .login-method.active { display:block; animation:fadeUp .35s ease both; }
+    .auth-panel   { display:none; }
+    .auth-panel.active { display:block; animation:fadeUp .35s ease both; }
+    .btn-social   { display:flex; align-items:center; gap:10px; padding:.6rem 1rem;
+                    border:2px solid var(--rosa-light); border-radius:10px; background:#fff;
+                    font-size:.85rem; font-weight:500; cursor:pointer; text-decoration:none;
+                    color:var(--negro); transition:all .25s; margin-bottom:.5rem; }
+    .btn-social:hover { border-color:var(--rosa); color:var(--rosa); transform:translateX(4px); }
+    .pass-wrapper { position:relative; }
+    .toggle-pass  { position:absolute; right:12px; top:50%; transform:translateY(-50%);
+                    cursor:pointer; color:var(--gris); }
+    @media(max-width:480px){ .form-grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<div class="auth-wrapper">
+  <div class="auth-card" style="max-width:480px;">
+
+    <!-- Logo -->
+    <div class="auth-logo">
+      <img src="{{ url_for('static', filename='images/BRILLO-BOOM.svg') }}"
+           alt="Brillo-Boom" style="height:80px;"/>
+      <span class="brand-name">Brillo-Boom</span>
+    </div>
+
+    <!-- Flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}{% for cat, msg in messages %}
+        <div class="alert alert-{{ 'danger' if cat=='error' else cat }}" data-auto-close>
+          <i class="fas fa-{% if cat in ['error','danger'] %}exclamation-circle{% elif cat=='success' %}check-circle{% else %}info-circle{% endif %}"></i>
+          {{ msg }}
+        </div>
+      {% endfor %}{% endif %}
+    {% endwith %}
+
+    <!-- Tabs -->
+    <div class="auth-tabs">
+      <div class="auth-tab active" data-target="panel-login">Iniciar sesión</div>
+      <div class="auth-tab"        data-target="panel-registro">Registrarse</div>
+    </div>
+
+    <!-- ══ LOGIN ══ -->
+    <div class="auth-panel active" id="panel-login">
+      <!-- Selector correo / teléfono -->
+      <div style="display:flex;gap:.5rem;margin-bottom:1.2rem;">
+        <button class="method-tab active" data-method="email">
+          <i class="fas fa-envelope"></i> Correo
+        </button>
+        <button class="method-tab" data-method="phone">
+          <i class="fas fa-phone"></i> Teléfono
+        </button>
+      </div>
+
+      <!-- Login correo -->
+      <div class="login-method active" data-method="email">
+        <form method="POST" action="{{ url_for('login') }}" novalidate>
+          {{ form.hidden_tag() }}
+          <div class="form-group">
+            <label class="form-label">Correo electrónico</label>
+            <input type="email" name="email" class="form-control" placeholder="tu@correo.com"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Contraseña</label>
+            <div class="pass-wrapper">
+              <input type="password" id="pass-login" name="password"
+                     class="form-control" placeholder="••••••••"/>
+              <span class="toggle-pass" onclick="togglePass('pass-login',this)">
+                <i class="fas fa-eye"></i>
+              </span>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;
+                      margin-bottom:1.2rem;font-size:.83rem;">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" name="remember"/> Recordarme
+            </label>
+            <a href="#" style="color:var(--rosa);">¿Olvidaste tu contraseña?</a>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full">
+            <i class="fas fa-sign-in-alt"></i> Iniciar sesión
+          </button>
+        </form>
+      </div>
+
+      <!-- Login teléfono -->
+      <div class="login-method" data-method="phone">
+        <form method="POST" action="{{ url_for('auth_telefono') }}">
+          <div class="form-group">
+            <label class="form-label">Número de teléfono</label>
+            <input type="tel" name="telefono" class="form-control"
+                   placeholder="+57 300 000 0000"/>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full">
+            <i class="fas fa-arrow-right"></i> Continuar
+          </button>
+        </form>
+      </div>
+
+      <div class="divider">o continúa con</div>
+
+      <!-- Redes sociales -->
+      <a href="{{ url_for('auth_google') }}" class="btn-social">
+        <svg width="20" height="20" viewBox="0 0 48 48">
+          <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.7 2.5 30.2 0 24 0 14.6 0 6.7 5.5 2.8 13.5l7.8 6c1.9-5.7 7.2-9.9 13.4-10z"/>
+          <path fill="#4285F4" d="M46.5 24.5c0-1.5-.1-3-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.2 7.1-17z"/>
+          <path fill="#FBBC05" d="M10.6 28.5A14.6 14.6 0 0 1 9.5 24c0-1.6.3-3.1.8-4.5l-7.8-6A24 24 0 0 0 0 24c0 3.9.9 7.5 2.8 10.5l7.8-6z"/>
+          <path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.6 2.2-7.7 2.2-6.2 0-11.5-4.2-13.4-9.9l-7.8 6C6.7 42.5 14.6 48 24 48z"/>
+        </svg> Continuar con Google
+      </a>
+      <a href="{{ url_for('auth_facebook') }}" class="btn-social">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877F2">
+          <path d="M24 12.07C24 5.41 18.63 0 12 0S0 5.41 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.04V9.41c0-3.02 1.8-4.7 4.54-4.7 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.95.93-1.95 1.88v2.27h3.32l-.53 3.5h-2.79V24C19.61 23.1 24 18.1 24 12.07z"/>
+        </svg> Continuar con Facebook
+      </a>
+      <a href="{{ url_for('auth_instagram') }}" class="btn-social">
+        <svg width="20" height="20" viewBox="0 0 24 24">
+          <defs><radialGradient id="ig" cx="30%" cy="107%" r="150%">
+            <stop offset="0%" stop-color="#fdf497"/><stop offset="45%" stop-color="#fd5949"/>
+            <stop offset="60%" stop-color="#d6249f"/><stop offset="90%" stop-color="#285AEB"/>
+          </radialGradient></defs>
+          <path fill="url(#ig)" d="M12 2.163c3.2 0 3.584.012 4.85.07 1.366.062 2.633.336 3.608 1.31.975.976 1.248 2.243 1.31 3.608.058 1.267.069 1.65.069 4.85s-.012 3.584-.07 4.85c-.062 1.366-.336 2.633-1.31 3.608-.976.975-2.243 1.248-3.608 1.31-1.267.058-1.65.069-4.85.069s-3.584-.012-4.85-.07c-1.366-.062-2.633-.336-3.608-1.31-.975-.976-1.248-2.243-1.31-3.608C2.175 15.747 2.163 15.364 2.163 12s.012-3.584.07-4.85c.062-1.366.336-2.633 1.31-3.608.976-.975 2.243-1.248 3.608-1.31C8.416 2.175 8.8 2.163 12 2.163zm0 5.838a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm6.406-1.338a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/>
+        </svg> Continuar con Instagram
+      </a>
+      <a href="{{ url_for('auth_tiktok') }}" class="btn-social">
+        <svg width="20" height="20" viewBox="0 0 24 24">
+          <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.74a4.85 4.85 0 0 1-1.01-.05z"/>
+        </svg> Continuar con TikTok
+      </a>
+    </div>
+
+    <!-- ══ REGISTRO ══ -->
+    <div class="auth-panel" id="panel-registro">
+      <form method="POST" action="{{ url_for('registro') }}" novalidate id="formReg">
+        {{ reg_form.hidden_tag() }}
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Nombre completo *</label>
+            <input type="text" name="nombre" class="form-control" placeholder="Tu nombre" required/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Teléfono *</label>
+            <input type="tel" name="telefono" class="form-control" placeholder="+57 300 000 0000" required/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Correo electrónico *</label>
+          <input type="email" name="email" class="form-control" placeholder="tu@correo.com" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dirección de entrega *</label>
+          <input type="text" name="direccion" class="form-control"
+                 placeholder="Calle 123 # 45-67, Ciudad" required/>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Contraseña *</label>
+            <div class="pass-wrapper">
+              <input type="password" id="pass-reg" name="password"
+                     class="form-control" placeholder="Mínimo 6 caracteres" required minlength="6"/>
+              <span class="toggle-pass" onclick="togglePass('pass-reg',this)">
+                <i class="fas fa-eye"></i>
+              </span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirmar contraseña *</label>
+            <div class="pass-wrapper">
+              <input type="password" id="pass-conf" name="confirmar"
+                     class="form-control" placeholder="Repite tu contraseña" required/>
+              <span class="toggle-pass" onclick="togglePass('pass-conf',this)">
+                <i class="fas fa-eye"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+        <p style="font-size:.78rem;color:var(--gris);margin-bottom:1rem;">
+          Al registrarte aceptas nuestros
+          <a href="#" style="color:var(--rosa);">términos y condiciones</a>.
+        </p>
+        <button type="submit" class="btn btn-primary btn-full">
+          <i class="fas fa-user-plus"></i> Crear mi cuenta
+        </button>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+// Tabs Login / Registro
+document.querySelectorAll('.auth-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(tab.dataset.target).classList.add('active');
+  });
+});
+// Tabs método (correo / teléfono)
+document.querySelectorAll('.method-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.method-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.login-method').forEach(f => f.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelector(`.login-method[data-method="${btn.dataset.method}"]`).classList.add('active');
+  });
+});
+// Abrir tab registro desde URL
+if (new URLSearchParams(location.search).get('tab') === 'registro')
+  document.querySelectorAll('.auth-tab')[1].click();
+// Validar contraseñas
+document.getElementById('formReg')?.addEventListener('submit', e => {
+  if (document.getElementById('pass-reg').value !==
+      document.getElementById('pass-conf').value) {
+    e.preventDefault();
+    alert('Las contraseñas no coinciden.');
+  }
+});
+// Toggle password
+function togglePass(id, icon) {
+  const input = document.getElementById(id);
+  const show  = input.type === 'password';
+  input.type  = show ? 'text' : 'password';
+  icon.innerHTML = show ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}{% if modo_checkout %}Finalizar compra{% else %}Mi Carrito{% endif %}{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h2 class="section-title">
+      <i class="fas fa-{% if modo_checkout %}credit-card{% else %}shopping-cart{% endif %}"></i>
+      {% if modo_checkout %}Finalizar Compra{% else %}Mi Carrito{% endif %}
+    </h2>
+
+    {% if items %}
+    <div style="display:grid;grid-template-columns:1fr 320px;gap:2rem;align-items:start;">
+
+      <!-- Lista de items -->
+      <div style="display:flex;flex-direction:column;gap:1rem;">
+        {% for item in items %}
+        <div style="background:var(--blanco);border-radius:var(--radio);box-shadow:var(--sombra);
+                    padding:1.5rem;display:flex;align-items:center;gap:1.2rem;">
+          <div style="width:80px;height:80px;border-radius:10px;background:var(--rosa-light);
+                      display:flex;align-items:center;justify-content:center;font-size:2rem;flex-shrink:0;">
+            {% if item.producto.tiene_imagen() %}
+              <img src="{{ url_for('imagen_producto', id_producto=item.producto.id_producto) }}"
+                   style="width:100%;height:100%;object-fit:cover;border-radius:10px;"/>
+            {% else %}💄{% endif %}
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:.75rem;font-weight:700;color:var(--rosa);text-transform:uppercase;">
+              {{ item.producto.empresa.nombre }}
+            </div>
+            <div style="font-weight:600;font-size:1rem;margin:.2rem 0;">{{ item.producto.nombre }}</div>
+            <div style="color:var(--rosa);font-weight:700;">${{ "{:,.0f}".format(item.producto.precio) }}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:.75rem;">
+            {% if not modo_checkout %}
+            <form method="POST" action="{{ url_for('actualizar_carrito') }}"
+                  style="display:flex;align-items:center;gap:.4rem;">
+              <input type="hidden" name="id_producto" value="{{ item.id_prod }}"/>
+              <input type="number" name="cantidad" value="{{ item.cantidad }}"
+                     min="1" max="{{ item.producto.stock }}"
+                     style="width:60px;padding:.4rem;text-align:center;font-weight:600;
+                            color:var(--rosa);border:2px solid var(--rosa-light);border-radius:8px;"/>
+              <button type="submit" class="btn btn-sm btn-ghost" title="Actualizar cantidad">
+                <i class="fas fa-sync-alt"></i>
+              </button>
+            </form>
+            {% else %}
+            <span style="background:var(--rosa-light);padding:.4rem .9rem;border-radius:8px;
+                         font-weight:600;color:var(--rosa);">{{ item.cantidad }}</span>
+            {% endif %}
+            <span style="font-weight:700;min-width:80px;text-align:right;">
+              ${{ "{:,.0f}".format(item.producto.precio * item.cantidad) }}
+            </span>
+          </div>
+          {% if not modo_checkout %}
+          <a href="{{ url_for('eliminar_carrito', id_prod=item.id_prod) }}"
+             class="btn btn-sm" style="background:#fdecea;color:#c00;border:none;"
+             onclick="return confirm('¿Eliminar?')">
+            <i class="fas fa-trash"></i>
+          </a>
+          {% endif %}
+        </div>
+        {% endfor %}
+
+        {% if not modo_checkout %}
+        <div style="display:flex;gap:.75rem;">
+          <a href="{{ url_for('vaciar_carrito') }}" class="btn btn-ghost btn-sm"
+             onclick="return confirm('¿Vaciar carrito?')">
+            <i class="fas fa-trash-alt"></i> Vaciar carrito
+          </a>
+          <a href="{{ url_for('catalogo') }}" class="btn btn-ghost btn-sm">
+            <i class="fas fa-arrow-left"></i> Seguir comprando
+          </a>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Resumen lateral -->
+      <div style="background:var(--blanco);border-radius:var(--radio);box-shadow:var(--sombra);
+                  padding:1.8rem;position:sticky;top:80px;">
+        <h3 style="font-family:var(--font-title);color:var(--rosa);margin-bottom:1.5rem;">
+          Resumen del pedido
+        </h3>
+        {% for item in items %}
+        <div style="display:flex;justify-content:space-between;font-size:.88rem;
+                    padding:.4rem 0;border-bottom:1px solid var(--rosa-light);">
+          <span>{{ item.producto.nombre }} x{{ item.cantidad }}</span>
+          <span>${{ "{:,.0f}".format(item.producto.precio * item.cantidad) }}</span>
+        </div>
+        {% endfor %}
+        <div style="display:flex;justify-content:space-between;font-weight:700;
+                    font-size:1.15rem;margin-top:1rem;padding-top:.5rem;">
+          <span>Total</span>
+          <span style="color:var(--rosa);">${{ "{:,.0f}".format(total) }}</span>
+        </div>
+
+        {% if modo_checkout %}
+        <!-- Método de pago -->
+        <h4 style="font-family:var(--font-title);color:var(--rosa);
+                   margin:1.5rem 0 1rem;font-size:1rem;">
+          <i class="fas fa-wallet"></i> Método de pago
+        </h4>
+        <form method="POST" action="{{ url_for('checkout') }}">
+          <div style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.2rem;">
+            {% for medio in medios %}
+            <label style="display:flex;align-items:center;gap:.75rem;padding:.75rem;
+                          border:2px solid var(--rosa-light);border-radius:8px;
+                          cursor:pointer;transition:all .25s;"
+                   onmouseover="this.style.borderColor='var(--rosa)'"
+                   onmouseout="this.style.borderColor='var(--rosa-light)'">
+              <input type="radio" name="id_medio" value="{{ medio.id_medio }}"
+                     {% if loop.first %}checked{% endif %}
+                     style="accent-color:var(--rosa);"/>
+              <span style="font-size:.88rem;font-weight:500;">{{ medio.nombre }}</span>
+            </label>
+            {% endfor %}
+          </div>
+          <button type="submit" class="btn btn-primary btn-full"
+                  onclick="return confirm('¿Confirmar pedido?')">
+            <i class="fas fa-check-circle"></i> Confirmar — ${{ "{:,.0f}".format(total) }}
+          </button>
+        </form>
+        <a href="{{ url_for('carrito') }}" class="btn btn-ghost btn-full" style="margin-top:.75rem;">
+          <i class="fas fa-arrow-left"></i> Volver al carrito
+        </a>
+        {% else %}
+        <a href="{{ url_for('checkout') }}" class="btn btn-primary btn-full btn-lg"
+           style="margin-top:1rem;">
+          <i class="fas fa-credit-card"></i> Proceder al pago
+        </a>
+        {% endif %}
+      </div>
+    </div>
+
+    {% else %}
+    <div style="text-align:center;padding:5rem 2rem;background:var(--blanco);
+                border-radius:var(--radio);box-shadow:var(--sombra);">
+      <div style="font-size:5rem;margin-bottom:1.5rem;">🛍️</div>
+      <h3 style="color:var(--rosa);font-family:var(--font-title);margin-bottom:.5rem;">
+        Tu carrito está vacío
+      </h3>
+      <p style="color:var(--gris);margin-bottom:2rem;">Agrega productos desde el catálogo</p>
+      <a href="{{ url_for('catalogo') }}" class="btn btn-primary btn-lg">
+        <i class="fas fa-shopping-bag"></i> Explorar catálogo
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

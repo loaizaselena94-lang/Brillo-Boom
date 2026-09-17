@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{ titulo }} — Admin Brillo-Boom</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <div class="sidebar-logo">
+      <img src="{{ url_for('static', filename='images/BRILLO.svg') }}" alt="Logo"/>
+      <span>Brillo-Boom</span>
+    </div>
+    <ul class="sidebar-nav">
+      <li><a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+      <li><a href="{{ url_for('admin_productos') }}" class="active"><i class="fas fa-box-open"></i> Productos</a></li>
+      <li><a href="{{ url_for('admin_usuarios') }}"><i class="fas fa-users"></i> Usuarios</a></li>
+      <li><a href="{{ url_for('admin_pedidos') }}"><i class="fas fa-shopping-bag"></i> Pedidos</a></li>
+    </ul>
+    <div style="margin-top:auto;padding-top:2rem;">
+      <a href="{{ url_for('logout') }}"
+         style="display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.6);
+                text-decoration:none;padding:.75rem 1rem;border-radius:10px;font-size:.88rem;">
+        <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+      </a>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    <div class="admin-header">
+      <h1>
+        <i class="fas fa-{% if producto %}edit{% else %}plus{% endif %}"></i> {{ titulo }}
+      </h1>
+      <a href="{{ url_for('admin_productos') }}" class="btn btn-ghost btn-sm">
+        <i class="fas fa-arrow-left"></i> Volver a productos
+      </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}{% for cat,msg in messages %}
+        <div class="alert alert-{{ 'danger' if cat=='error' else cat }}" data-auto-close>{{ msg }}</div>
+      {% endfor %}{% endif %}
+    {% endwith %}
+
+    <div style="background:var(--blanco);border-radius:var(--radio);
+                box-shadow:var(--sombra);padding:2rem;max-width:640px;">
+           <form method="POST" enctype="multipart/form-data" novalidate>
+        {{ form.hidden_tag() }}
+
+        <div class="form-group">
+          <label class="form-label">{{ form.nombre.label.text }} *</label>
+          {{ form.nombre(class='form-control', placeholder='Ej: Labial Mate Intenso') }}
+          {% for e in form.nombre.errors %}
+            <p class="form-error"><i class="fas fa-exclamation-circle"></i> {{ e }}</p>
+          {% endfor %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ form.descripcion.label.text }} *</label>
+          {{ form.descripcion(class='form-control', rows=3,
+             placeholder='Describe el producto (máximo 200 caracteres)') }}
+          {% for e in form.descripcion.errors %}
+            <p class="form-error"><i class="fas fa-exclamation-circle"></i> {{ e }}</p>
+          {% endfor %}
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div class="form-group">
+            <label class="form-label">{{ form.precio.label.text }} *</label>
+            {{ form.precio(class='form-control', placeholder='45000') }}
+            {% for e in form.precio.errors %}
+              <p class="form-error"><i class="fas fa-exclamation-circle"></i> {{ e }}</p>
+            {% endfor %}
+          </div>
+          <div class="form-group">
+            <label class="form-label">{{ form.stock.label.text }} *</label>
+            {{ form.stock(class='form-control', placeholder='20') }}
+            {% for e in form.stock.errors %}
+              <p class="form-error"><i class="fas fa-exclamation-circle"></i> {{ e }}</p>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ form.imagen.label.text }}</label>
+          {{ form.imagen(class='form-control', id='img-file-input', accept='image/*') }}
+          {% for e in form.imagen.errors %}
+            <p class="form-error"><i class="fas fa-exclamation-circle"></i> {{ e }}</p>
+          {% endfor %}
+          <small style="color:var(--gris);display:block;margin-top:.3rem;">
+            {% if producto and producto.tiene_imagen() %}
+              Ya hay una imagen guardada. Sube otra solo si quieres reemplazarla.
+            {% else %}
+              Formatos permitidos: JPG, PNG, WEBP, GIF.
+            {% endif %}
+          </small>
+          <!-- Preview de imagen -->
+          {% if producto and producto.tiene_imagen() %}
+            <img id="img-preview" src="{{ url_for('imagen_producto', id_producto=producto.id_producto) }}"
+                 style="height:90px;margin-top:.6rem;border-radius:8px;display:block;object-fit:cover;"/>
+          {% else %}
+            <img id="img-preview"
+                 style="height:90px;margin-top:.6rem;border-radius:8px;display:none;object-fit:cover;"/>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ form.id_empresa_productos.label.text }} *</label>
+          {{ form.id_empresa_productos(class='form-control') }}
+          {% for e in form.id_empresa_productos.errors %}
+            <p class="form-error"><i class="fas fa-exclamation-circle"></i> {{ e }}</p>
+          {% endfor %}
+        </div>
+
+        <div style="display:flex;gap:.75rem;margin-top:1.5rem;">
+          {{ form.submit(class='btn btn-primary') }}
+          <a href="{{ url_for('admin_productos') }}" class="btn btn-ghost">Cancelar</a>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+  // Preview de imagen en tiempo real (lee el archivo local seleccionado)
+  const input   = document.getElementById('img-file-input');
+  const preview = document.getElementById('img-preview');
+  if (input && preview) {
+    input.addEventListener('change', function() {
+      const archivo = this.files[0];
+      if (!archivo) return;
+      const lector = new FileReader();
+      lector.onload = e => {
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+      };
+      lector.readAsDataURL(archivo);
+    });
+  }
+</script>
+</body>
+</html>

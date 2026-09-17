@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Usuarios — Admin Brillo-Boom</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <div class="sidebar-logo">
+      <img src="{{ url_for('static', filename='images/BRILLO.svg') }}" alt="Logo"/>
+      <span>Brillo-Boom</span>
+    </div>
+    <ul class="sidebar-nav">
+      <li><a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+      <li><a href="{{ url_for('admin_productos') }}"><i class="fas fa-box-open"></i> Productos</a></li>
+      <li><a href="{{ url_for('admin_usuarios') }}" class="active"><i class="fas fa-users"></i> Usuarios</a></li>
+      <li><a href="{{ url_for('admin_pedidos') }}"><i class="fas fa-shopping-bag"></i> Pedidos</a></li>
+      <li><a href="{{ url_for('index') }}" target="_blank"><i class="fas fa-external-link-alt"></i> Ver tienda</a></li>
+    </ul>
+    <div style="margin-top:auto;padding-top:2rem;">
+      <a href="{{ url_for('logout') }}"
+         style="display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.6);
+                text-decoration:none;padding:.75rem 1rem;border-radius:10px;font-size:.88rem;">
+        <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+      </a>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    <div class="admin-header">
+      <h1><i class="fas fa-users"></i> Usuarios Registrados</h1>
+      <span style="background:var(--rosa-light);color:var(--rosa);padding:.4rem 1rem;
+                   border-radius:50px;font-weight:700;">
+        {{ usuarios|length }} usuarios
+      </span>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}{% for cat,msg in messages %}
+        <div class="alert alert-{{ 'danger' if cat=='error' else cat }}" data-auto-close>{{ msg }}</div>
+      {% endfor %}{% endif %}
+    {% endwith %}
+
+    <!-- BOTONES DE REPORTES -->
+    <div style="display:flex;gap:1rem;margin-bottom:2rem;flex-wrap:wrap;">
+      <a href="{{ url_for('reporte_usuarios') }}" class="btn btn-primary btn-sm">
+        <i class="fas fa-file-pdf"></i> Reporte Usuarios PDF
+      </a>
+    </div>
+
+    <!-- Stats rápidas -->
+    <div style="display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+      <div style="background:var(--blanco);border-radius:10px;padding:.75rem 1.2rem;
+                  box-shadow:var(--sombra);border-left:3px solid var(--rosa);font-size:.88rem;">
+        <strong style="color:var(--rosa);">{{ usuarios|selectattr('id_tipou','eq',2)|list|length }}</strong> clientes
+      </div>
+      <div style="background:var(--blanco);border-radius:10px;padding:.75rem 1.2rem;
+                  box-shadow:var(--sombra);border-left:3px solid #f39c12;font-size:.88rem;">
+        <strong style="color:#f39c12;">{{ usuarios|selectattr('id_tipou','eq',1)|list|length }}</strong> administradores
+      </div>
+    </div>
+
+    <div style="background:var(--blanco);border-radius:var(--radio);
+                box-shadow:var(--sombra);overflow:hidden;">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Nombre</th><th>Correo</th>
+            <th>Teléfono</th><th>Dirección</th><th>Rol</th><th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in usuarios %}
+          <tr>
+            <td><strong>#{{ u.id_usuario }}</strong></td>
+            <td>
+              <div style="display:flex;align-items:center;gap:.75rem;">
+                <div style="width:36px;height:36px;border-radius:50%;
+                            background:var(--rosa-light);display:flex;align-items:center;
+                            justify-content:center;font-family:var(--font-title);
+                            font-weight:700;color:var(--rosa);flex-shrink:0;">
+                  {{ u.nombre[0].upper() }}
+                </div>
+                <strong>{{ u.nombre }}</strong>
+              </div>
+            </td>
+            <td>{{ u.email }}</td>
+            <td>{{ u.telefono }}</td>
+            <td style="font-size:.85rem;color:var(--gris);max-width:160px;
+                       white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              {{ u.direccion }}
+            </td>
+            <td>
+              {% if u.id_tipou == 1 %}
+                <span style="background:#fff3e0;color:#e65100;padding:.25rem .7rem;
+                             border-radius:50px;font-size:.72rem;font-weight:700;">
+                  <i class="fas fa-shield-alt"></i> Admin
+                </span>
+              {% else %}
+                <span style="background:var(--rosa-light);color:var(--rosa);padding:.25rem .7rem;
+                             border-radius:50px;font-size:.72rem;font-weight:700;">
+                  <i class="fas fa-user"></i> Cliente
+                </span>
+              {% endif %}
+            </td>
+        <td>
+          {% if u.id_tipou != 1 %}
+          <form method="POST"
+                action="{{ url_for('admin_eliminar_usuario', id=u.id_usuario) }}"
+                onsubmit="return confirm('¿Eliminar al usuario {{ u.nombre }}?')">
+            <button type="submit" class="btn btn-sm"
+                    style="background:#fdecea;color:#c00;border:none;">
+              <i class="fas fa-trash"></i>
+            </button>
+          </form>
+          {% else %}
+          <span style="color:var(--gris);font-size:.78rem;">—</span>
+          {% endif %}
+        </td>
+      </tr>
+          {% else %}
+          <tr>
+            <td colspan="7" style="text-align:center;color:var(--gris);padding:3rem;">
+              No hay usuarios registrados.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
