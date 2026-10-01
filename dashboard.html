@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}Panel Admin — Brillo-Boom{% endblock %}
+sss
+{% block content %}
+<div style="display:flex;min-height:90vh">
+
+  <!-- ─ Sidebar Admin ─────────────────────────────────────────── -->
+  <aside class="admin-sidebar d-none d-md-block">
+    <div class="sidebar-logo">
+      <img src="{{ url_for('static', filename='images/BRILLO.svg') }}" alt="Brillo-Boom">
+      <p style="color:rgba(255, 255, 255, 0.788);font-size:0.75rem;margin:0.3rem 0 0">Panel Administrador</p>
+    </div>
+    <nav class="mt-2">
+      <a href="{{ url_for('admin_dashboard') }}" class="admin-nav-link active">
+        <i class="bi bi-speedometer2"></i> Dashboard
+      </a>
+      <a href="{{ url_for('admin_productos') }}" class="admin-nav-link">
+        <i class="bi bi-box-seam"></i> Productos
+      </a>
+      <a href="{{ url_for('admin_usuarios') }}" class="admin-nav-link">
+        <i class="bi bi-people"></i> Usuarios
+      </a>
+      <a href="{{ url_for('index') }}" class="admin-nav-link" style="margin-top:auto">
+        <i class="bi bi-shop"></i> Ver tienda
+      </a>
+      <a href="{{ url_for('logout') }}" class="admin-nav-link" style="color:rgba(255,200,200,0.9)">
+        <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+      </a>
+    </nav>
+  </aside>
+
+  <!-- ─ Contenido ─────────────────────────────────────────────── -->
+  <main class="admin-content">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h3 style="color:var(--carmesi);margin:0">Dashboard</h3>
+      </div>
+      <a href="{{ url_for('admin_nuevo_producto') }}" class="btn-carmesi">
+        <i class="bi bi-plus-circle"></i> Nuevo producto
+      </a>
+    </div>
+
+    <!-- ─ Tarjetas estadísticas ─ -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-card">
+          <div class="stat-icon">👥</div>
+          <div>
+            <div class="stat-numero">{{ stats.total_usuarios }}</div>
+            <div class="stat-label">Usuarias</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-card">
+          <div class="stat-icon">📦</div>
+          <div>
+            <div class="stat-numero">{{ stats.total_productos }}</div>
+            <div class="stat-label">Productos</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-card" style="border-bottom-color:#dc3545">
+          <div class="stat-icon" style="background:#ffe5e9">⚠️</div>
+          <div>
+            <div class="stat-numero" style="color:#dc3545">{{ stats.productos_agotados }}</div>
+            <div class="stat-label">Agotados</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-card" style="border-bottom-color:#0d6efd">
+          <div class="stat-icon" style="background:#e8f0ff">🛍️</div>
+          <div>
+            <div class="stat-numero" style="color:#0d6efd">{{ stats.total_pedidos }}</div>
+            <div class="stat-label">Pedidos</div>
+          </div>
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+
+      <!-- ─ Productos agotados ─ -->
+      <div class="col-lg-5">
+        <div style="background:var(--blanco);border-radius:var(--radio);padding:1.5rem;box-shadow:var(--sombra)">
+          <h5 style="color:#dc3545;margin-bottom:1rem">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>Productos agotados
+          </h5>
+          {% if agotados %}
+          <div style="max-height:240px;overflow-y:auto">
+            {% for prod in agotados %}
+            <div style="display:flex;align-items:center;justify-content:space-between;
+                        padding:0.5rem 0;border-bottom:1px solid var(--rosa-light)">
+              <div>
+                <div style="font-size:0.88rem;font-weight:600">{{ prod.nombre }}</div>
+                <div style="font-size:0.75rem;color:var(--texto-gris)">{{ prod.empresa.nombre }}</div>
+              </div>
+              <a href="{{ url_for('admin_editar_producto', id_producto=prod.id_producto) }}"
+                 class="btn-carmesi" style="font-size:0.75rem;padding:0.25rem 0.7rem">
+                Actualizar
+              </a>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <p style="color:var(--texto-gris);text-align:center;padding:1rem">
+            ✅ Todos los productos tienen stock
+          </p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- ─ Más pedidos ─ -->
+      <div class="col-lg-6">
+        <div class="tabla-admin">
+          <div style="padding:1rem 1.2rem;border-bottom:1px solid var(--rosa-dark)">
+            <h5 style="margin:0;color:var(--carmesi);font-size:0.95rem">
+              <i class="bi bi-fire me-2"></i>Productos más pedidos
+            </h5>
+          </div>
+          <table class="table mb-0">
+            <tbody>
+              {% for item in mas_pedidos %}
+              <tr>
+                <td>{{ loop.index }}. {{ item.producto.nombre }}</td>
+                <td style="color:var(--carmesi);font-weight:600">{{ item.total }} uds.</td>
+                <td>
+                  <span style="font-size:0.75rem;background:var(--rosa);color:var(--carmesi);
+                               border-radius:var(--radio-full);padding:0.1rem 0.6rem">
+                    {{ item.producto.empresa.nombre }}
+                  </span>
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="3" class="text-center text-muted py-3">Sin datos aún</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}

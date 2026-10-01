@@ -94,7 +94,7 @@ def login():
             login_user(user, remember=form.remember.data)
             flash(f'¡Bienvenida, {user.nombre}! 💄', 'success')
             return redirect(url_for('admin_dashboard') if user.es_admin()
-                            else url_for('perfil'))
+                            else url_for('index'))
         flash('Correo o contraseña incorrectos.', 'error')
     return render_template('login.html', form=form, reg_form=reg_form)
 
